@@ -12,7 +12,6 @@ abstract class AbstractPuzzleConfig
 {
 
     protected static $configList = [];
-    protected static $aliasList = [];
 
     public static function getConfigPaths($key) {
         if (empty(self::$configList[$key])) {
@@ -20,14 +19,6 @@ abstract class AbstractPuzzleConfig
             return [];
         }
         return self::$configList[$key];
-    }
-
-    public static function getConfigAlias($key, $package)
-    {
-        if (empty(self::$aliasList[$key][$package])) {
-            throw new ConfigurationException("There is not alias for the package '$package'");
-        }
-        return self::$aliasList[$key][$package];
     }
 
 } 

@@ -20,40 +20,30 @@ class PuzzleClassCompiler
         }
 
         $configList = array();
-        $aliasList = array();
         foreach ($data as $key => $configs) {
             $keyConfigs = array();
-            $keyAliases = array();
             foreach ($configs as $config) {
+                // validate path
                 if (!isset($config["path"])) {
                     throw new ConfigurationException("There was no file path for the key '$key'");
                 }
                 if (!is_file($config["path"]) || !is_readable($config["path"])) {
                     throw new ConfigurationException("The path '{$config["path"]}'' does not exist or is not readable");
                 }
-
-                $keyConfigs[] = "
-            '{$config["path"]}'";
-
-                if (isset($config["alias"])) {
-                    $keyAliases[] = "
-            '{$config["name"]} => '{$config["alias"]}'";
+                if (empty($config["name"])) {
+                    throw new ConfigurationException("There is no name associated with the path '{$config["path"]}'");
                 }
+                $configKey = isset($config["alias"])? $config["alias"]: str_replace("/", "_", $config["name"]);
+                $keyConfigs[] = "
+            '$configKey' => '{$config["path"]}'";
             }
 
             $configList[] = "
         '$key' => array(" . implode(",", $keyConfigs) . "
         )";
 
-            if (!empty($keyAliases)) {
-                $aliasList[] = "
-        '$key' => array(" . implode(",", $keyAliases) . "
-        )";
-            }
-
         }
         $configList = implode(",", $configList);
-        $aliasList = implode(",", $aliasList);
 
 
 
@@ -71,9 +61,6 @@ class PuzzleConfig extends AbstractPuzzleConfig
 {
 
     protected static \$configList = array($configList;
-    );
-
-    protected static \$aliasList = array($aliasList
     );
 
 }
