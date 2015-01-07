@@ -42,7 +42,7 @@ class ScriptController
         }
         $output->write("Compiling {$appNamespace}PuzzleConfig to $appSourceDir/PuzzleConfig.php");
         $compiler->compile($data, $appNamespace, $appSourceDir);
-        $output->write("Compiling successful");
+        $output->write("PuzzleConfig compiled");
     }
 
 } 
