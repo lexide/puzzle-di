@@ -14,6 +14,8 @@ class PuzzleClassCompiler
     public function compile(array $data, $appNamespace, $appSourceDir)
     {
         if (!empty($appNamespace)) {
+            // trim any trailing slashes
+            $appNamespace = rtrim($appNamespace, "\\");
             $appNamespace = "\nnamespace $appNamespace;";
         }
 

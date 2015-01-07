@@ -40,7 +40,7 @@ class ScriptController
             $appNamespace = key($autoload["psr-4"]);
             $appSourceDir .= current($autoload["psr-4"]);
         }
-        $output->write("Compiling $appNamespace\\PuzzleConfig to $appSourceDir/PuzzleConfig.php");
+        $output->write("Compiling {$appNamespace}PuzzleConfig to $appSourceDir/PuzzleConfig.php");
         $compiler->compile($data, $appNamespace, $appSourceDir);
         $output->write("Compiling successful");
     }
