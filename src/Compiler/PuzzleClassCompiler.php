@@ -60,7 +60,7 @@ use Downsider\PuzzleDI\Compiler\AbstractPuzzleConfig;
 class PuzzleConfig extends AbstractPuzzleConfig
 {
 
-    protected static \$configList = array($configList;
+    protected static \$configList = array($configList
     );
 
 }
