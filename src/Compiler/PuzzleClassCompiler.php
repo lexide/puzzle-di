@@ -19,11 +19,11 @@ class PuzzleClassCompiler
             $appNamespace = "\nnamespace $appNamespace;";
         }
 
-        $configList = [];
-        $aliasList = "";
+        $configList = array();
+        $aliasList = array();
         foreach ($data as $key => $configs) {
-            $keyConfigs = [];
-            $keyAliases = [];
+            $keyConfigs = array();
+            $keyAliases = array();
             foreach ($configs as $config) {
                 if (!isset($config["path"])) {
                     throw new ConfigurationException("There was no file path for the key '$key'");
@@ -42,18 +42,18 @@ class PuzzleClassCompiler
             }
 
             $configList[] = "
-        '$key' => [
-            " . implode(",\n", $keyConfigs) . "
-        ]";
+        '$key' => array(" . implode(",", $keyConfigs) . "
+        )";
 
-            $aliasList[] = "
-        '$key' => [
-            " . implode(",\n", $keyAliases) . "
-        ]";
+            if (!empty($keyAliases)) {
+                $aliasList[] = "
+        '$key' => array(" . implode(",", $keyAliases) . "
+        )";
+            }
 
         }
-        $configList = implode(",\n", $configList);
-        $aliasList = implode(",\n", $aliasList);
+        $configList = implode(",", $configList);
+        $aliasList = implode(",", $aliasList);
 
 
 
@@ -70,12 +70,10 @@ use Downsider\PuzzleDI\Compiler\AbstractPuzzleConfig;
 class PuzzleConfig extends AbstractPuzzleConfig
 {
 
-    protected static \$configList = array(
-$configList;
+    protected static \$configList = array($configList;
     );
 
-    protected static \$aliasList = array(
-$aliasList
+    protected static \$aliasList = array($aliasList
     );
 
 }
