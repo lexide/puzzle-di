@@ -16,9 +16,9 @@ class ScriptController
     public static function compileConfigList(Event $event)
     {
         $output = $event->getIO();
-
-        $dataCollector = new PuzzleDataCollector();
         $composer = $event->getComposer();
+
+        $dataCollector = new PuzzleDataCollector($composer->getInstallationManager());
         $repo = $composer->getRepositoryManager()->getLocalRepository();
 
         $data = $dataCollector->collectData($repo);
@@ -34,7 +34,7 @@ class ScriptController
         $package = $composer->getPackage();
         $autoload = $package->getAutoload();
         $appNamespace = "";
-        $appSourceDir = $package->getTargetDir();
+        $appSourceDir = realpath($composer->getConfig()->get("vendor-dir") . "/../") . "/" . $package->getTargetDir();
         $autoloadType = isset($autoload["psr-4"])? "psr-4": (isset($autoload["psr-0"])? "psr-0": null);
         if (!empty($autoloadType)) {
             $appNamespace = key($autoload["psr-4"]);

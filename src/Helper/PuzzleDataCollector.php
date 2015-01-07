@@ -1,5 +1,6 @@
 <?php
 namespace Downsider\PuzzleDI\Helper;
+use Composer\Installer\InstallationManager;
 use Composer\Repository\RepositoryInterface;
 use Composer\Package\Package;
 
@@ -8,6 +9,13 @@ use Composer\Package\Package;
  */
 class PuzzleDataCollector 
 {
+
+    protected $installationManager;
+
+    public function __construct(InstallationManager $installationManager)
+    {
+        $this->installationManager = $installationManager;
+    }
 
     public function collectData(RepositoryInterface $repo)
     {
@@ -26,7 +34,7 @@ class PuzzleDataCollector
 
                     $puzzleConfig = [
                         "name" => $package->getName(),
-                        "path" => $package->getTargetDir() . $config["path"]
+                        "path" => $this->installationManager->getInstallPath($package) . "/" .  $config["path"]
                     ];
                     if (!empty($config["alias"])) {
                         $puzzleConfig["alias"] = $config["alias"];
