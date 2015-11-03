@@ -1,13 +1,16 @@
 <?php
+/**
+ * @package Puzzle-DI
+ * @copyright Copyright © 2015 Danny Smart
+ */
+
 namespace Downsider\PuzzleDI\Helper;
+
 use Composer\Installer\InstallationManager;
 use Composer\Repository\RepositoryInterface;
 use Composer\Package\Package;
 
-/**
- *
- */
-class PuzzleDataCollector 
+class PuzzleDataCollector
 {
 
     protected $installationManager;

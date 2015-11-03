@@ -1,12 +1,11 @@
 <?php
 /**
- * Silktide Nibbler. Copyright 2013-2014 Silktide Ltd. All Rights Reserved.
+ * @package Puzzle-DI
+ * @copyright Copyright © 2015 Danny Smart
  */
+
 namespace Downsider\PuzzleDI\Compiler;
 
-/**
- *
- */
 abstract class AbstractPuzzleConfig
 {
 
