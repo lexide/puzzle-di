@@ -66,6 +66,14 @@ class PuzzleConfig extends AbstractPuzzleConfig
 }
 
 SOURCE;
+        $dirParts = explode("/", $appSourceDir);
+        $currentPath = "";
+        foreach ($dirParts as $part) {
+            $currentPath .= "/" . $part;
+            if (!is_dir($currentPath)) {
+                mkdir($currentPath, 0755);
+            }
+        }
 
         file_put_contents($appSourceDir . "/PuzzleConfig.php", $classSource);
     }
