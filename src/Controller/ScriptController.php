@@ -1,13 +1,16 @@
 <?php
+/**
+ * @package Puzzle-DI
+ * @copyright Copyright © 2015 Danny Smart
+ */
+
 namespace Downsider\PuzzleDI\Controller;
+
 use Composer\Script\Event;
 use Downsider\PuzzleDI\Compiler\PuzzleClassCompiler;
 use Downsider\PuzzleDI\Helper\PuzzleDataCollector;
 
-/**
- *
- */
-class ScriptController 
+class ScriptController
 {
 
     public static function compileConfigList(Event $event)
@@ -37,8 +40,8 @@ class ScriptController
         $autoloadType = isset($autoload["psr-4"])? "psr-4": (isset($autoload["psr-0"])? "psr-0": null);
         // if we're using PSR-x, use the target directory defined for that
         if (!empty($autoloadType)) {
-            $appNamespace = key($autoload["psr-4"]);
-            $appSourceDir .= current($autoload["psr-4"]);
+            $appNamespace = key($autoload[$autoloadType]);
+            $appSourceDir .= current($autoload[$autoloadType]);
         }
 
         // generate the PuzzleConfig class
