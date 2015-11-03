@@ -1,10 +1,12 @@
 {
   "name": "downsider/puzzle-di",
+  "type": "composer-plugin",
   "description": "Puzzle DI, auto configuration for dependency injection in modules",
   "license": "proprietary",
   "homepage": "https://github.com/downsider/puzzle-di",
   "require": {
-    "php": ">=5.3.0"
+    "php": ">=5.3.0",
+    "composer-plugin-api": "^1.0"
   },
   "require-dev": {
     "composer/composer": "1.0.*@dev",
@@ -16,12 +18,7 @@
       "Downsider\\PuzzleDI\\": "src"
     }
   },
-  "scripts": {
-    "post-install-cmd": [
-      "Downsider\\PuzzleDI\\Controller\\ScriptController::compileConfigList"
-    ],
-    "post-update-cmd": [
-      "Downsider\\PuzzleDI\\Controller\\ScriptController::compileConfigList"
-    ]
+  "extra": {
+    "class": "Downsider\\PuzzleDI\\Plugin\\PuzzlePlugin"
   }
 }
