@@ -11,7 +11,7 @@ use Downsider\PuzzleDI\Exception\ConfigurationException;
 class PuzzleClassCompiler
 {
 
-    public function compile(array $data, $appNamespace, $appSourceDir)
+    public function compile(array $data, $appNamespace, $appSourceDir, $appRootDir)
     {
         if (!empty($appNamespace)) {
             // trim any trailing slashes
@@ -33,6 +33,11 @@ class PuzzleClassCompiler
                 if (empty($config["name"])) {
                     throw new ConfigurationException("There is no name associated with the path '{$config["path"]}'");
                 }
+
+                if (!empty($appRootDir) && strpos($config["path"], $appRootDir) === 0) {
+                    $config["path"] = substr($config["path"], strlen($appRootDir));
+                }
+
                 $configKey = isset($config["alias"])? $config["alias"]: str_replace("/", "_", $config["name"]);
                 $keyConfigs[] = "
             '$configKey' => '{$config["path"]}'";
