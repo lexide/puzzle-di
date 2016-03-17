@@ -36,7 +36,7 @@ class ScriptController
         // Load the packages extra info so we can see if PuzzleDI needs additional information
         $package = $composer->getPackage();
         $extra = $package->getExtra();
-        $puzzleConfig = empty($extra["puzzle-di"])? []: $extra["puzzle-di"];
+        $puzzleConfig = empty($extra["downsider/puzzle-di"])? []: $extra["downsider/puzzle-di"];
 
         // find the path to the parent package's target directory
         $appNamespace = "";
