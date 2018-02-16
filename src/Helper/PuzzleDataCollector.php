@@ -4,7 +4,7 @@
  * @copyright Copyright © 2015 Danny Smart
  */
 
-namespace Downsider\PuzzleDI\Helper;
+namespace Lexide\PuzzleDI\Helper;
 
 use Composer\Installer\InstallationManager;
 use Composer\Repository\RepositoryInterface;
@@ -26,23 +26,29 @@ class PuzzleDataCollector
         foreach ($repo->getPackages() as $package) {
             /** @var Package $package */
             $extra = $package->getExtra();
-            if (!empty($extra["downsider-puzzle-di"]) && is_array($extra["downsider-puzzle-di"])) {
-                foreach ($extra["downsider-puzzle-di"] as $key => $config) {
-                    if ($key == (string) (int) $key) {
-                        continue;
-                    }
-                    if (!array_key_exists($key, $puzzleData)) {
-                        $puzzleData[$key] = array();
-                    }
+            $puzzleConfigKeys = [
+                "downsider-puzzle-di",
+                "lexide/puzzle-di"
+            ];
+            foreach ($puzzleConfigKeys as $configKey) {
+                if (!empty($extra[$configKey]) && is_array($extra[$configKey])) {
+                    foreach ($extra[$configKey] as $key => $config) {
+                        if ($key == (string)(int)$key) {
+                            continue;
+                        }
+                        if (!array_key_exists($key, $puzzleData)) {
+                            $puzzleData[$key] = array();
+                        }
 
-                    $puzzleConfig = [
-                        "name" => $package->getName(),
-                        "path" => $this->installationManager->getInstallPath($package) . "/" .  $config["path"]
-                    ];
-                    if (!empty($config["alias"])) {
-                        $puzzleConfig["alias"] = $config["alias"];
+                        $puzzleConfig = [
+                            "name" => $package->getName(),
+                            "path" => $this->installationManager->getInstallPath($package) . "/" . $config["path"]
+                        ];
+                        if (!empty($config["alias"])) {
+                            $puzzleConfig["alias"] = $config["alias"];
+                        }
+                        $puzzleData[$key][] = $puzzleConfig;
                     }
-                    $puzzleData[$key][] = $puzzleConfig;
                 }
             }
         }

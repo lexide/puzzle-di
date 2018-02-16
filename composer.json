@@ -1,24 +1,24 @@
 {
-  "name": "downsider/puzzle-di",
+  "name": "lexide/puzzle-di",
   "type": "composer-plugin",
   "description": "Puzzle DI, auto configuration for dependency injection in modules",
-  "license": "proprietary",
-  "homepage": "https://github.com/downsider/puzzle-di",
+  "license": "MIT",
+  "homepage": "https://github.com/lexide/puzzle-di",
   "require": {
-    "php": ">=5.3.0",
+    "php": ">=5.5.0",
     "composer-plugin-api": "^1.0"
   },
   "require-dev": {
-    "composer/composer": "1.0.*@dev",
+    "composer/composer": "^1.0",
     "phpunit/phpunit": "4.*",
     "mockery/mockery": "0.9.*"
   },
   "autoload": {
     "psr-4": {
-      "Downsider\\PuzzleDI\\": "src"
+      "Lexide\\PuzzleDI\\": "src"
     }
   },
   "extra": {
-    "class": "Downsider\\PuzzleDI\\Plugin\\PuzzlePlugin"
+    "class": "Lexide\\PuzzleDI\\Plugin\\PuzzlePlugin"
   }
 }

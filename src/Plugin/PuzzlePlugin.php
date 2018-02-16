@@ -4,7 +4,7 @@
  * @copyright Copyright © 2015 Danny Smart
  */
 
-namespace Downsider\PuzzleDI\Plugin;
+namespace Lexide\PuzzleDI\Plugin;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
@@ -12,7 +12,7 @@ use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
-use Downsider\PuzzleDI\Controller\ScriptController;
+use Lexide\PuzzleDI\Controller\ScriptController;
 
 class PuzzlePlugin implements PluginInterface, EventSubscriberInterface
 {

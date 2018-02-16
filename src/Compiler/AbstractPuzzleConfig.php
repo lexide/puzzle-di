@@ -4,7 +4,7 @@
  * @copyright Copyright © 2015 Danny Smart
  */
 
-namespace Downsider\PuzzleDI\Compiler;
+namespace Lexide\PuzzleDI\Compiler;
 
 abstract class AbstractPuzzleConfig
 {

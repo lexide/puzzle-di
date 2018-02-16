@@ -4,9 +4,9 @@
  * @copyright Copyright © 2015 Danny Smart
  */
 
-namespace Downsider\PuzzleDI\Compiler;
+namespace Lexide\PuzzleDI\Compiler;
 
-use Downsider\PuzzleDI\Exception\ConfigurationException;
+use Lexide\PuzzleDI\Exception\ConfigurationException;
 
 class PuzzleClassCompiler
 {
@@ -60,7 +60,7 @@ class PuzzleClassCompiler
  */
 $appNamespace
 
-use Downsider\PuzzleDI\Compiler\AbstractPuzzleConfig;
+use Lexide\PuzzleDI\Compiler\AbstractPuzzleConfig;
 
 class PuzzleConfig extends AbstractPuzzleConfig
 {

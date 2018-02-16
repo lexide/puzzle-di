@@ -4,12 +4,12 @@
  * @copyright Copyright © 2015 Danny Smart
  */
 
-namespace Downsider\PuzzleDI\Controller;
+namespace Lexide\PuzzleDI\Controller;
 
 use Composer\Script\Event;
-use Downsider\PuzzleDI\Compiler\PuzzleClassCompiler;
-use Downsider\PuzzleDI\Exception\ConfigurationException;
-use Downsider\PuzzleDI\Helper\PuzzleDataCollector;
+use Lexide\PuzzleDI\Compiler\PuzzleClassCompiler;
+use Lexide\PuzzleDI\Exception\ConfigurationException;
+use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 
 class ScriptController
 {
@@ -36,7 +36,18 @@ class ScriptController
         // Load the packages extra info so we can see if PuzzleDI needs additional information
         $package = $composer->getPackage();
         $extra = $package->getExtra();
-        $puzzleConfig = empty($extra["downsider/puzzle-di"])? []: $extra["downsider/puzzle-di"];
+
+        // loop over the possible config keys until a puzzle config is found
+        $puzzleConfigKeys = [
+            "lexide/puzzle-di",
+            "downsider/puzzle-di"
+        ];
+        foreach ($puzzleConfigKeys as $configKey) {
+            $puzzleConfig = empty($extra[$configKey]) ? [] : $extra[$configKey];
+            if (!empty($puzzleConfig)) {
+                break;
+            }
+        }
 
         // find the path to the parent package's target directory
         $appNamespace = "";
