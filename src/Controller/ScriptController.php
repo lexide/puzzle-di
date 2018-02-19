@@ -19,19 +19,6 @@ class ScriptController
         $output = $event->getIO();
         $composer = $event->getComposer();
 
-        // find repos that are configured to use Puzzle-DI
-        $dataCollector = new PuzzleDataCollector($composer->getInstallationManager());
-        $repo = $composer->getRepositoryManager()->getLocalRepository();
-
-        $data = $dataCollector->collectData($repo);
-
-        if (empty($data)) {
-            // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
-            $output->write("No installed modules are configured for use with Puzzle DI");
-            // we still need to create the PuzzleConfig class, so don't end the script here
-        }
-
-        $compiler = new PuzzleClassCompiler();
 
         // Load the packages extra info so we can see if PuzzleDI needs additional information
         $package = $composer->getPackage();
@@ -48,6 +35,26 @@ class ScriptController
                 break;
             }
         }
+
+        // find repos that are configured to use Puzzle-DI
+        $dataCollector = new PuzzleDataCollector($composer->getInstallationManager());
+        $repo = $composer->getRepositoryManager()->getLocalRepository();
+
+        $whitelist = !empty($puzzleConfig["whitelist"])? $extra["whitelist"]: [];
+
+        $data = [];
+        // If we don't have a whitelist, all packages would be filtered out so only collect data if one is present
+        if (!empty($whitelist)) {
+            $data = $dataCollector->collectData($repo, $whitelist);
+        }
+
+        if (empty($data)) {
+            // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
+            $output->write("No installed modules are configured (and whitelisted) for use with Puzzle DI");
+            // we still need to create the PuzzleConfig class, so don't end the script here
+        }
+
+        $compiler = new PuzzleClassCompiler();
 
         // find the path to the parent package's target directory
         $appNamespace = "";
