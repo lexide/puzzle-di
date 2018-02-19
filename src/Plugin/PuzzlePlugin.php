@@ -40,6 +40,11 @@ class PuzzlePlugin implements PluginInterface, EventSubscriberInterface
      */
     public function runPlugin(Event $event)
     {
+        // If puzzle has been removed in this update, the script controller may no longer exist
+        if (!class_exists("\\Lexide\\PuzzleDI\\Controller\\ScriptController")) {
+            return;
+        }
+
         $controller = new ScriptController();
         $controller->compileConfigList($event);
     }
