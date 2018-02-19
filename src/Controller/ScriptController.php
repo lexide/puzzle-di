@@ -40,7 +40,7 @@ class ScriptController
         $dataCollector = new PuzzleDataCollector($composer->getInstallationManager());
         $repo = $composer->getRepositoryManager()->getLocalRepository();
 
-        $whitelist = !empty($puzzleConfig["whitelist"])? $extra["whitelist"]: [];
+        $whitelist = !empty($puzzleConfig["whitelist"])? $puzzleConfig["whitelist"]: [];
 
         $data = [];
         // If we don't have a whitelist, all packages would be filtered out so only collect data if one is present
