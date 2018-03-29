@@ -5,6 +5,7 @@ namespace Lexide\PuzzleDI\Test\Helper;
 use Composer\Installer\InstallationManager;
 use Composer\Package\Package;
 use Composer\Repository\RepositoryInterface;
+use Lexide\PuzzleDI\Exception\ConfigurationException;
 use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 use Mockery\Mock;
 
@@ -13,6 +14,9 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
 
     protected $rootDir = "root";
 
+    /**
+     * @var string - The target library to register files for
+     */
     protected $target = "target/lib";
 
     protected $secondTarget = "second/lib";
@@ -48,6 +52,28 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
         $collector = new PuzzleDataCollector($installationManager);
 
         $this->assertArraySubset($expectedData, $collector->collectData($repo, $whitelist));
+
+    }
+
+    /**
+     * @expectedException \Lexide\PuzzleDI\Exception\ConfigurationException
+     */
+    public function testInvalidWhitelist()
+    {
+        /** @var RepositoryInterface|Mock $repo */
+        $repo = \Mockery::mock(RepositoryInterface::class);
+        $repo->shouldReceive("getPackages")->andReturn([]);
+
+        /** @var InstallationManager|Mock $installationManager */
+        $installationManager = \Mockery::mock(InstallationManager::class)->shouldIgnoreMissing($this->rootDir);
+
+        $collector = new PuzzleDataCollector($installationManager);
+
+        $whitelist = [
+            "library"
+        ];
+
+        $collector->collectData($repo, $whitelist);
 
     }
 
@@ -270,6 +296,29 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
                         "two" => "path3"
                     ], $this->secondTarget)
                 )
+            ],
+            [ #8 using library which only specifies a whitelist
+                [
+                    "one" => [
+                        "whitelist" => $this->createWhitelist(["two"]),
+                    ],
+                    "two" => [
+                        "files" => $this->createFilesArray("path2")
+                    ]
+                ],
+                $this->createWhitelist(["two"]),
+                $this->createExpectedArray([])
+            ],
+            [ #9 using deprecated config style in dependency
+                [
+                    "one" => [
+                        "files" => $this->createFilesArray("path1"),
+                        "whitelist" => $this->createWhitelist(["two"])
+                    ],
+                    "two" => $this->createFilesArray("path2")
+                ],
+                $this->createWhitelist(["two"]),
+                $this->createExpectedArray(["two" => "path2"])
             ]
         ];
     }
