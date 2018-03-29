@@ -9,17 +9,28 @@ namespace Lexide\PuzzleDI\Helper;
 use Composer\Installer\InstallationManager;
 use Composer\Repository\RepositoryInterface;
 use Composer\Package\Package;
+use Lexide\PuzzleDI\Exception\ConfigurationException;
 
 class PuzzleDataCollector
 {
 
     protected $installationManager;
 
+    /**
+     * PuzzleDataCollector constructor.
+     * @param InstallationManager $installationManager
+     */
     public function __construct(InstallationManager $installationManager)
     {
         $this->installationManager = $installationManager;
     }
 
+    /**
+     * @param RepositoryInterface $repo
+     * @param array $whitelist
+     * @return array
+     * @throws ConfigurationException
+     */
     public function collectData(RepositoryInterface $repo, array $whitelist)
     {
         $puzzleData = [];
@@ -90,11 +101,22 @@ class PuzzleDataCollector
 
         return $puzzleData;
     }
-    
+
+    /**
+     * @param array $whitelistChain
+     * @param array $whitelistedPackages
+     * @return array
+     * @throws ConfigurationException
+     */
     protected function flattenWhitelistChain(array $whitelistChain, array $whitelistedPackages)
     {
         $whitelist = $whitelistedPackages;
         foreach ($whitelistedPackages as $targetLibrary => $libraryWhitelist) {
+
+            if (!is_array($libraryWhitelist)) {
+                throw new ConfigurationException("The whitelist for library '$targetLibrary' is not an array. Found '" . (string) $libraryWhitelist . "'");
+            }
+
             foreach ($libraryWhitelist as $package) {
                 if (!empty($whitelistChain[$package][$targetLibrary])) {
                     // merge the whitelist with any from further down the chain
