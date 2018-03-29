@@ -48,16 +48,23 @@ class PuzzleDataCollector
                     $repoConfig = $extra[$configKey];
 
                     // handle version 1.* config formats
-                    if (empty($repoConfig["files"])) {
+                    if (!isset($repoConfig["files"]) && !isset($repoConfig["whitelist"])) {
                         $repoConfig = ["files" => $repoConfig];
-                    } else {
-                        if (!empty($repoConfig["whitelist"]) && is_array($repoConfig["whitelist"])) {
-                            if (empty($whitelistChain[$packageName])) {
-                                $whitelistChain[$packageName] = [];
-                            }
-                            $whitelistChain[$packageName] = $repoConfig["whitelist"];
-                        }
                     }
+
+                    // prepare the whitelist chain
+                    if (!empty($repoConfig["whitelist"]) && is_array($repoConfig["whitelist"])) {
+                        if (empty($whitelistChain[$packageName])) {
+                            $whitelistChain[$packageName] = [];
+                        }
+                        $whitelistChain[$packageName] = $repoConfig["whitelist"];
+                    }
+
+                    // if we don't have any files, we're done now
+                    if (empty($repoConfig["files"])) {
+                        continue;
+                    }
+
                     foreach ($repoConfig["files"] as $targetLibrary => $config) {
                         // ignore numeric keys
                         if ($targetLibrary == (string)(int)$targetLibrary) {
