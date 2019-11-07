@@ -93,6 +93,7 @@ class PuzzleDataCollector
 
         // filter for whitelisted packages
         foreach ($puzzleData as $target => $files) {
+            $whitelistedFiles = [];
             if (!empty($whitelist[$target])) {
                 $whitelistedFiles = array_intersect_key($files, array_flip($whitelist[$target]));
             }
