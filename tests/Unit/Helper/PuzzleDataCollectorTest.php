@@ -1,6 +1,6 @@
 <?php
 
-namespace Lexide\PuzzleDI\Test\Helper;
+namespace Lexide\PuzzleDI\Test\Unit\Helper;
 
 use Composer\Installer\InstallationManager;
 use Composer\Package\Package;
@@ -24,11 +24,13 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
     /**
      * @dataProvider extraProvider
      *
-     * @param $composerConfig
-     * @param $whitelist
-     * @param $expectedData
+     * @param array $composerConfig
+     * @param array $whitelist
+     * @param array $expectedData
+     * @param array $notExpectedTargets
+     * @throws ConfigurationException
      */
-    public function testWhitelists($composerConfig, $whitelist, $expectedData)
+    public function testWhitelists(array $composerConfig, array $whitelist, array $expectedData, array $notExpectedTargets = [])
     {
 
         /** @var Package|Mock $package */
@@ -51,7 +53,13 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
 
         $collector = new PuzzleDataCollector($installationManager);
 
-        $this->assertArraySubset($expectedData, $collector->collectData($repo, $whitelist));
+        $actualData = $collector->collectData($repo, $whitelist);
+
+        $this->assertArraySubset($expectedData, $actualData);
+
+        foreach ($notExpectedTargets as $notKey) {
+            $this->assertArrayNotHasKey($notKey, $actualData);
+        }
 
     }
 
@@ -319,6 +327,46 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
                 ],
                 $this->createWhitelist(["two"]),
                 $this->createExpectedArray(["two" => "path2"])
+            ],
+            [ #10 multiple targets, one whitelisted for the other and not whitelisted as a target
+                [
+                    "one" => [
+                        "files" => array_replace_recursive(
+                            $this->createFilesArray("one/path1"),
+                            $this->createFilesArray("two/path1", $this->secondTarget)
+                        ),
+                        "whitelist" => $this->createWhitelist([$this->secondTarget])
+                    ],
+                    $this->secondTarget => [
+                        "files" => $this->createFilesArray("one/path2")
+                    ]
+                ],
+                $this->createWhitelist(["one"]),
+                $this->createExpectedArray(["one" => "one/path1", $this->secondTarget =>"one/path2"]),
+                [$this->secondTarget]
+            ],
+            [ #11 multiple targets, one whitelisted for the other
+                [
+                    "one" => [
+                        "files" => array_replace_recursive(
+                            $this->createFilesArray("one/path1"),
+                            $this->createFilesArray("two/path1", $this->secondTarget)
+                        ),
+                        "whitelist" => $this->createWhitelist([$this->secondTarget])
+                    ],
+                    $this->secondTarget => [
+                        "files" => $this->createFilesArray("one/path2")
+                    ]
+                ],
+                array_replace_recursive(
+                    $this->createWhitelist(["one"]),
+                    $this->createWhitelist(["one"], $this->secondTarget)
+                ),
+                array_replace_recursive(
+                    $this->createExpectedArray(["one" => "one/path1", $this->secondTarget =>"one/path2"]),
+                    $this->createExpectedArray(["one" => "two/path1"], $this->secondTarget)
+
+                )
             ]
         ];
     }
