@@ -8,7 +8,4 @@
             <directory suffix=".php">tests/Integration</directory>
         </testsuite>
     </testsuites>
-    <listeners>
-        <listener class="\Mockery\Adapter\Phpunit\TestListener" />
-    </listeners>
 </phpunit>
