@@ -38,6 +38,12 @@ class ScriptController
      */
     protected $output;
 
+    /**
+     * @param PuzzleClassCompiler $compiler
+     * @param PuzzleDataCollector $dataCollector
+     * @param PackageInterface $package
+     * @param IOInterface $output
+     */
     public function __construct(PuzzleClassCompiler $compiler, PuzzleDataCollector $dataCollector, PackageInterface $package, IOInterface $output)
     {
         $this->compiler = $compiler;
@@ -158,6 +164,12 @@ class ScriptController
         return $appNamespace;
     }
 
+    /**
+     * @param PackageInterface $package
+     * @param string $appRootDir
+     * @param string $appNamespace
+     * @return string
+     */
     protected function getAppSourceDir(PackageInterface $package, $appRootDir, $appNamespace)
     {
         $appSourceDir = $appRootDir . (empty($package->getTargetDir())? "": DIRECTORY_SEPARATOR . $package->getTargetDir());
