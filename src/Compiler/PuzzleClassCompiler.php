@@ -11,6 +11,13 @@ use Lexide\PuzzleDI\Exception\ConfigurationException;
 class PuzzleClassCompiler
 {
 
+    /**
+     * @param array $data
+     * @param string $appNamespace
+     * @param string $appSourceDir
+     * @param string $appRootDir
+     * @throws ConfigurationException
+     */
     public function compile(array $data, $appNamespace, $appSourceDir, $appRootDir)
     {
         if (!empty($appNamespace)) {
@@ -81,7 +88,16 @@ SOURCE;
             }
         }
 
-        file_put_contents($appSourceDir . "/PuzzleConfig.php", $classSource);
+        file_put_contents($this->getPuzzleConfigFilepath($appSourceDir), $classSource);
+    }
+
+    /**
+     * @param string $appSourceDir
+     * @return string
+     */
+    public function getPuzzleConfigFilepath($appSourceDir)
+    {
+        return $appSourceDir . "/PuzzleConfig.php";
     }
 
 } 

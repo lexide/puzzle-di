@@ -6,6 +6,10 @@
 
 namespace Lexide\PuzzleDI\Controller;
 
+use Composer\Compiler;
+use Composer\IO\IOInterface;
+use Composer\Package\Package;
+use Composer\Package\PackageInterface;
 use Composer\Script\Event;
 use Lexide\PuzzleDI\Compiler\PuzzleClassCompiler;
 use Lexide\PuzzleDI\Exception\ConfigurationException;
@@ -14,14 +18,106 @@ use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 class ScriptController
 {
 
-    public static function compileConfigList(Event $event)
+    /**
+     * @var PuzzleClassCompiler
+     */
+    protected $compiler;
+
+    /**
+     * @var PuzzleDataCollector
+     */
+    protected $dataCollector;
+
+    /**
+     * @var PackageInterface
+     */
+    protected $package;
+
+    /**
+     * @var IOInterface
+     */
+    protected $output;
+
+    /**
+     * @param PuzzleClassCompiler $compiler
+     * @param PuzzleDataCollector $dataCollector
+     * @param PackageInterface $package
+     * @param IOInterface $output
+     */
+    public function __construct(PuzzleClassCompiler $compiler, PuzzleDataCollector $dataCollector, PackageInterface $package, IOInterface $output)
     {
-        $output = $event->getIO();
-        $composer = $event->getComposer();
+        $this->compiler = $compiler;
+        $this->dataCollector = $dataCollector;
+        $this->package = $package;
+        $this->output = $output;
+    }
 
+    /**
+     * @param Event $event
+     * @throws ConfigurationException
+     */
+    public function compileConfigList()
+    {
+        // Load the packages puzzle config, if it has any
+        $puzzleComposerConfig = $this->getPuzzleComposerConfig($this->package);
 
-        // Load the packages extra info so we can see if PuzzleDI needs additional information
-        $package = $composer->getPackage();
+        // find repos that are configured to use Puzzle-DI
+        $whitelist = !empty($puzzleComposerConfig["whitelist"])? $puzzleComposerConfig["whitelist"]: [];
+
+        $data = [];
+        // If we don't have a whitelist, all packages would be filtered out so only collect data if one is present
+        if (!empty($whitelist)) {
+            $data = $this->dataCollector->collectData($whitelist);
+        }
+
+        if (empty($data)) {
+            // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
+            $this->output->write("</info><info>Lexide/PuzzleDI:</info> No installed modules are configured (and whitelisted) for use with Puzzle DI");
+            // we still need to create the PuzzleConfig class, so don't end the script here
+        }
+
+        // find the path to the parent package's target directory
+        $appNamespace = $this->getAppNamespace($this->package, $puzzleComposerConfig);
+        $appRootDir = getcwd(); // the cwd will always be the directory that the composer.json file is in
+
+        $appSourceDir = $this->getAppSourceDir($this->package, $appRootDir, $appNamespace);
+
+        // As composer uses absolute paths when installing modules, we have to do extra work to get relative URLs
+        // The path mask will remove itself from any path that starts with the mask
+        // e.g. a path mask of '/home/puzzle-di/' will turn '/home/puzzle-di/app/config.yml' into 'app/config.yml'
+        $pathMask = !empty($puzzleComposerConfig["absolute-paths"])? "": $appRootDir . DIRECTORY_SEPARATOR;
+
+        // generate the PuzzleConfig class
+        $this->output->write("</info><info>Lexide/PuzzleDI:</info> Compiling <comment>{$appNamespace}PuzzleConfig</comment> to <comment>{$this->compiler->getPuzzleConfigFilepath($appSourceDir)}</comment>");
+        $this->compiler->compile($data, $appNamespace, $appSourceDir, $pathMask);
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @throws ConfigurationException
+     */
+    public function uninstall()
+    {
+        $puzzleComposerConfig = $this->getPuzzleComposerConfig($this->package);
+
+        $appNamespace = $this->getAppNamespace($this->package, $puzzleComposerConfig);
+        $appRootDir = getcwd(); // the cwd will always be the directory that the composer.json file is in
+
+        $appSourceDir = $this->getAppSourceDir($this->package, $appRootDir, $appNamespace);
+
+        // remove the PuzzleConfig class if it exists
+        $puzzleConfigPath = $this->compiler->getPuzzleConfigFilepath($appSourceDir);
+        $this->output->write("</info><info>Lexide/PuzzleDI:</info> Removing <comment>{$appNamespace}PuzzleConfig</comment> from <comment>$puzzleConfigPath</comment>");
+        unlink($puzzleConfigPath);
+
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @return array
+     */
+    protected function getPuzzleComposerConfig(PackageInterface $package)
+    {
         $extra = $package->getExtra();
 
         // loop over the possible config keys until a puzzle config is found
@@ -29,6 +125,9 @@ class ScriptController
             "lexide/puzzle-di",
             "downsider/puzzle-di"
         ];
+
+        $puzzleConfig = [];
+
         foreach ($puzzleConfigKeys as $configKey) {
             $puzzleConfig = empty($extra[$configKey]) ? [] : $extra[$configKey];
             if (!empty($puzzleConfig)) {
@@ -36,59 +135,78 @@ class ScriptController
             }
         }
 
-        // find repos that are configured to use Puzzle-DI
-        $dataCollector = new PuzzleDataCollector($composer->getInstallationManager());
-        $repo = $composer->getRepositoryManager()->getLocalRepository();
+        return $puzzleConfig;
+    }
 
-        $whitelist = !empty($puzzleConfig["whitelist"])? $puzzleConfig["whitelist"]: [];
-
-        $data = [];
-        // If we don't have a whitelist, all packages would be filtered out so only collect data if one is present
-        if (!empty($whitelist)) {
-            $data = $dataCollector->collectData($repo, $whitelist);
-        }
-
-        if (empty($data)) {
-            // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
-            $output->write("No installed modules are configured (and whitelisted) for use with Puzzle DI");
-            // we still need to create the PuzzleConfig class, so don't end the script here
-        }
-
-        $compiler = new PuzzleClassCompiler();
-
-        // find the path to the parent package's target directory
+    /**
+     * @param PackageInterface $package
+     * @param array $puzzleComposerConfig
+     * @return string
+     * @throws ConfigurationException
+     */
+    protected function getAppNamespace(PackageInterface $package, array $puzzleComposerConfig)
+    {
         $appNamespace = "";
-        $appRootDir = getcwd(); // the cwd will always be the directory that the composer.json file is in
-        $appSourceDir = $appRootDir . (empty($package->getTargetDir())? "": DIRECTORY_SEPARATOR . $package->getTargetDir());
 
         // if we're using PSR-x, use the target directory defined for that
-        $autoload = $package->getAutoload();
-        $autoloadType = isset($autoload["psr-4"])? "psr-4": (isset($autoload["psr-0"])? "psr-0": null);
-        if (!empty($autoloadType)) {
+        $autoload = $this->getAutoload($package);
+        if (!empty($autoload)) {
             // if the main project namespace is not the first autoload entry, it needs to be set in puzzle-di config
-            $appNamespace = !empty($puzzleConfig["namespace"])
-                ? $puzzleConfig["namespace"]
-                : key($autoload[$autoloadType]);
+            $appNamespace = !empty($puzzleComposerConfig["namespace"])
+                ? $puzzleComposerConfig["namespace"]
+                : key($autoload);
 
-            if (empty($autoload[$autoloadType][$appNamespace])) {
+            if (empty($autoload[$appNamespace])) {
                 throw new ConfigurationException("Cannot compile PuzzleConfig. The application namespace '$appNamespace' is not registered with composer");
-            }
-
-            $autoloadSourceDir = $autoload[$autoloadType][$appNamespace];
-            if (!empty($autoloadSourceDir)) {
-                $appSourceDir = realpath($appSourceDir . DIRECTORY_SEPARATOR . $autoloadSourceDir);
             }
         }
 
+        return $appNamespace;
+    }
 
-        // As composer uses absolute paths when installing modules, we have to do extra work to get relative URLs
-        // The path mask will remove itself from any path that starts with the mask
-        // e.g. a path mask of '/home/puzzle-di/' will turn '/home/puzzle-di/app/config.yml' into 'app/config.yml'
-        $pathMask = !empty($puzzleConfig["absolute-paths"])? "": $appRootDir . DIRECTORY_SEPARATOR;
+    /**
+     * @param PackageInterface $package
+     * @param string $appRootDir
+     * @param string $appNamespace
+     * @return string
+     */
+    protected function getAppSourceDir(PackageInterface $package, $appRootDir, $appNamespace)
+    {
+        $appSourceDir = $appRootDir . (empty($package->getTargetDir())? "": DIRECTORY_SEPARATOR . $package->getTargetDir());
 
-        // generate the PuzzleConfig class
-        $output->write("<info>PuzzleDI: Compiling</info> <comment>{$appNamespace}PuzzleConfig</comment> <info>to</info> <comment>$appSourceDir/PuzzleConfig.php</comment>");
-        $compiler->compile($data, $appNamespace, $appSourceDir, $pathMask);
+        $autoload = $this->getAutoload($package);
+
+        if (!empty($autoload)) {
+            $autoloadSourceDir = $autoload[$appNamespace];
+            if (!empty($autoloadSourceDir)) {
+                $appSourceDir = $appSourceDir . DIRECTORY_SEPARATOR . $autoloadSourceDir;
+
+                // run realpath against this value, but it might not exist so don't overwrite in that case
+                $realPath = realpath($appSourceDir . DIRECTORY_SEPARATOR . $autoloadSourceDir);
+                if ($realPath !== false) {
+                    $appSourceDir = $realPath;
+                }
+            }
+        }
+
+        return $appSourceDir;
+    }
+
+    /**
+     * @param PackageInterface $package
+     * @return array
+     */
+    protected function getAutoload(PackageInterface $package)
+    {
+        $autoload = $package->getAutoload();
+
+        foreach (["psr-4", "psr-0"] as $autoloadType) {
+            if (isset($autoload[$autoloadType])) {
+                return $autoload[$autoloadType];
+            }
+        }
+
+        return null;
     }
 
 } 
