@@ -7,10 +7,12 @@ use Composer\Package\Package;
 use Composer\Repository\RepositoryInterface;
 use Lexide\PuzzleDI\Exception\ConfigurationException;
 use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\Mock;
 
 class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
 {
+    use MockeryPHPUnitIntegration;
 
     protected $rootDir = "root";
 
@@ -51,9 +53,9 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
         /** @var InstallationManager|Mock $installationManager */
         $installationManager = \Mockery::mock(InstallationManager::class)->shouldIgnoreMissing($this->rootDir);
 
-        $collector = new PuzzleDataCollector($installationManager);
+        $collector = new PuzzleDataCollector($installationManager, $repo);
 
-        $actualData = $collector->collectData($repo, $whitelist);
+        $actualData = $collector->collectData($whitelist);
 
         $this->assertArraySubset($expectedData, $actualData);
 
@@ -75,13 +77,13 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
         /** @var InstallationManager|Mock $installationManager */
         $installationManager = \Mockery::mock(InstallationManager::class)->shouldIgnoreMissing($this->rootDir);
 
-        $collector = new PuzzleDataCollector($installationManager);
+        $collector = new PuzzleDataCollector($installationManager, $repo);
 
         $whitelist = [
             "library"
         ];
 
-        $collector->collectData($repo, $whitelist);
+        $collector->collectData($whitelist);
 
     }
 

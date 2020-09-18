@@ -14,28 +14,36 @@ use Lexide\PuzzleDI\Exception\ConfigurationException;
 class PuzzleDataCollector
 {
 
+    /**
+     * @var InstallationManager
+     */
     protected $installationManager;
+
+    /**
+     * @var RepositoryInterface
+     */
+    protected $repo;
 
     /**
      * PuzzleDataCollector constructor.
      * @param InstallationManager $installationManager
      */
-    public function __construct(InstallationManager $installationManager)
+    public function __construct(InstallationManager $installationManager, RepositoryInterface $repo)
     {
         $this->installationManager = $installationManager;
+        $this->repo = $repo;
     }
 
     /**
-     * @param RepositoryInterface $repo
      * @param array $whitelist
      * @return array
      * @throws ConfigurationException
      */
-    public function collectData(RepositoryInterface $repo, array $whitelist)
+    public function collectData(array $whitelist)
     {
         $puzzleData = [];
         $whitelistChain = [];
-        foreach ($repo->getPackages() as $package) {
+        foreach ($this->repo->getPackages() as $package) {
             /** @var Package $package */
             $extra = $package->getExtra();
             $packageName = $package->getName();
