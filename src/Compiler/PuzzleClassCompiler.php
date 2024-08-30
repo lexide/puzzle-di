@@ -18,7 +18,7 @@ class PuzzleClassCompiler
      * @param string $appRootDir
      * @throws ConfigurationException
      */
-    public function compile(array $data, $appNamespace, $appSourceDir, $appRootDir)
+    public function compile(array $data, string $appNamespace, string $appSourceDir, string $appRootDir): void
     {
         if (!empty($appNamespace)) {
             // trim any trailing slashes
@@ -31,34 +31,39 @@ class PuzzleClassCompiler
             $keyConfigs = array();
             foreach ($configs as $config) {
                 // validate path
-                if (!isset($config["path"])) {
-                    throw new ConfigurationException("There was no file path for the key '$key'");
-                }
-                if (!is_file($config["path"]) || !is_readable($config["path"])) {
-                    throw new ConfigurationException("The path '{$config["path"]}'' does not exist or is not readable");
-                }
-                if (empty($config["name"])) {
-                    throw new ConfigurationException("There is no name associated with the path '{$config["path"]}'");
+                if (isset($config["class"])) {
+                    $class = $config["class"];
+                    if (!class_exists($class)) {
+                        throw new ConfigurationException("The class '$class' does not exist");
+                    }
+                    $configItem = $class;
+                } elseif (isset($config["path"])) {
+                    $path = $config["path"];
+                    if (!is_file($path) || !is_readable($path)) {
+                        throw new ConfigurationException("The path '$path' does not exist or is not readable");
+                    }
+
+                    if (!empty($appRootDir) && str_starts_with($path, $appRootDir)) {
+                        $path = substr($path, strlen($appRootDir));
+                    }
+
+                    $configItem = $path;
+                } else {
+                    throw new ConfigurationException("There was no class or file path for the key '$key'");
                 }
 
-                if (!empty($appRootDir) && strpos($config["path"], $appRootDir) === 0) {
-                    $config["path"] = substr($config["path"], strlen($appRootDir));
+                if (empty($config["name"]) && empty($config["alias"])) {
+                    throw new ConfigurationException("There is no name or alias associated with key '$key'");
                 }
 
-                $configKey = isset($config["alias"])? $config["alias"]: str_replace("/", "_", $config["name"]);
-                $keyConfigs[] = "
-            '$configKey' => '{$config["path"]}'";
+                $configKey = $config["alias"] ?? str_replace("/", "_", $config["name"]);
+                $keyConfigs[] = "            \"$configKey\" => \"$configItem\"";
             }
 
-            $configList[] = "
-        '$key' => array(" . implode(",", $keyConfigs) . "
-        )";
+            $configList[] = "        \"$key\" => [\n" . implode(",\n", $keyConfigs) . "\n        ]";
 
         }
-        $configList = implode(",", $configList);
-
-
-
+        $configList = implode(",\n", $configList);
 
         $classSource = <<<SOURCE
 <?php
@@ -72,8 +77,9 @@ use Lexide\PuzzleDI\Compiler\AbstractPuzzleConfig;
 class PuzzleConfig extends AbstractPuzzleConfig
 {
 
-    protected static \$configList = array($configList
-    );
+    protected static \$configList = [
+$configList
+    ];
 
 }
 
@@ -95,7 +101,7 @@ SOURCE;
      * @param string $appSourceDir
      * @return string
      */
-    public function getPuzzleConfigFilepath($appSourceDir)
+    public function getPuzzleConfigFilepath(string $appSourceDir): string
     {
         return $appSourceDir . "/PuzzleConfig.php";
     }

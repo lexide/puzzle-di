@@ -59,8 +59,14 @@ class PuzzleDataCollector
 
                     $puzzleConfig = [
                         "name" => $packageName,
-                        "path" => $this->installationManager->getInstallPath($package) . "/" . $config["path"]
                     ];
+                    
+                    if (!empty($config["class"])) {
+                        $puzzleConfig["class"] = $config["class"];
+                    } elseif (!empty($config["path"])) {
+                        $puzzleConfig["path"] = $this->installationManager->getInstallPath($package) . "/" . $config["path"];
+                    }
+
                     if (!empty($config["alias"])) {
                         $puzzleConfig["alias"] = $config["alias"];
                     }
