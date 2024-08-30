@@ -53,10 +53,9 @@ class ScriptController
     }
 
     /**
-     * @param Event $event
      * @throws ConfigurationException
      */
-    public function compileConfigList()
+    public function compileConfigList(): void
     {
         // Load the packages puzzle config, if it has any
         $puzzleComposerConfig = $this->getPuzzleComposerConfig($this->package);
@@ -93,10 +92,9 @@ class ScriptController
     }
 
     /**
-     * @param PackageInterface $package
      * @throws ConfigurationException
      */
-    public function uninstall()
+    public function uninstall(): void
     {
         $puzzleComposerConfig = $this->getPuzzleComposerConfig($this->package);
 
@@ -116,26 +114,10 @@ class ScriptController
      * @param PackageInterface $package
      * @return array
      */
-    protected function getPuzzleComposerConfig(PackageInterface $package)
+    protected function getPuzzleComposerConfig(PackageInterface $package): array
     {
         $extra = $package->getExtra();
-
-        // loop over the possible config keys until a puzzle config is found
-        $puzzleConfigKeys = [
-            "lexide/puzzle-di",
-            "downsider/puzzle-di"
-        ];
-
-        $puzzleConfig = [];
-
-        foreach ($puzzleConfigKeys as $configKey) {
-            $puzzleConfig = empty($extra[$configKey]) ? [] : $extra[$configKey];
-            if (!empty($puzzleConfig)) {
-                break;
-            }
-        }
-
-        return $puzzleConfig;
+        return $extra["lexide/puzzle-di"] ?? [];
     }
 
     /**
@@ -144,7 +126,7 @@ class ScriptController
      * @return string
      * @throws ConfigurationException
      */
-    protected function getAppNamespace(PackageInterface $package, array $puzzleComposerConfig)
+    protected function getAppNamespace(PackageInterface $package, array $puzzleComposerConfig): string
     {
         $appNamespace = "";
 
@@ -170,9 +152,9 @@ class ScriptController
      * @param string $appNamespace
      * @return string
      */
-    protected function getAppSourceDir(PackageInterface $package, $appRootDir, $appNamespace)
+    protected function getAppSourceDir(PackageInterface $package, string $appRootDir, string $appNamespace): string
     {
-        $appSourceDir = $appRootDir . (empty($package->getTargetDir())? "": DIRECTORY_SEPARATOR . $package->getTargetDir());
+        $appSourceDir = $appRootDir . (empty($package->getTargetDir()) ? "" : DIRECTORY_SEPARATOR . $package->getTargetDir());
 
         $autoload = $this->getAutoload($package);
 
@@ -194,9 +176,9 @@ class ScriptController
 
     /**
      * @param PackageInterface $package
-     * @return array
+     * @return ?array
      */
-    protected function getAutoload(PackageInterface $package)
+    protected function getAutoload(PackageInterface $package): ?array
     {
         $autoload = $package->getAutoload();
 
