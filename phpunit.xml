@@ -2,10 +2,7 @@
 <phpunit bootstrap="vendor/autoload.php" >
     <testsuites>
         <testsuite name="unit-tests">
-            <directory suffix=".php">tests/Unit</directory>
-        </testsuite>
-        <testsuite name="integration-tests">
-            <directory suffix=".php">tests/Integration</directory>
+            <directory suffix=".php">test</directory>
         </testsuite>
     </testsuites>
 </phpunit>
