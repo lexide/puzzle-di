@@ -1,18 +1,21 @@
 <?php
 
-namespace Lexide\PuzzleDI\Test\Unit\Helper;
+namespace Lexide\PuzzleDI\Test\Helper;
 
 use Composer\Installer\InstallationManager;
 use Composer\Package\Package;
 use Composer\Repository\RepositoryInterface;
+use DMS\PHPUnitExtensions\ArraySubset\ArraySubsetAsserts;
 use Lexide\PuzzleDI\Exception\ConfigurationException;
 use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\Mock;
+use PHPUnit\Framework\TestCase;
 
-class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
+class PuzzleDataCollectorTest extends TestCase
 {
     use MockeryPHPUnitIntegration;
+    use ArraySubsetAsserts;
 
     protected $rootDir = "root";
 
@@ -65,11 +68,10 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    /**
-     * @expectedException \Lexide\PuzzleDI\Exception\ConfigurationException
-     */
     public function testInvalidWhitelist()
     {
+        $this->expectException(ConfigurationException::class);
+
         /** @var RepositoryInterface|Mock $repo */
         $repo = \Mockery::mock(RepositoryInterface::class);
         $repo->shouldReceive("getPackages")->andReturn([]);
@@ -319,17 +321,27 @@ class PuzzleDataCollectorTest extends \PHPUnit_Framework_TestCase
                 $this->createWhitelist(["two"]),
                 $this->createExpectedArray([])
             ],
-            [ #9 using deprecated config style in dependency
+            [ #9 target uses class names
                 [
                     "one" => [
-                        "files" => $this->createFilesArray("path1"),
-                        "whitelist" => $this->createWhitelist(["two"])
-                    ],
-                    "two" => $this->createFilesArray("path2")
+                        "files" => [
+                            $this->target => [
+                                "class" => "MyClassName"
+                            ]
+                        ]
+                    ]
                 ],
-                $this->createWhitelist(["two"]),
-                $this->createExpectedArray(["two" => "path2"])
+                $this->createWhitelist(["one"]),
+                [
+                    $this->target => [
+                        [
+                            "name" => "one",
+                            "class" => "MyClassName"
+                        ]
+                    ]
+                ]
             ],
+              #9 TODO: add test for "class"
             [ #10 multiple targets, one whitelisted for the other and not whitelisted as a target
                 [
                     "one" => [
