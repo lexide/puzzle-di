@@ -60,7 +60,7 @@ class PuzzleDataCollector
                     $puzzleConfig = [
                         "name" => $packageName,
                     ];
-                    
+
                     if (!empty($config["class"])) {
                         $puzzleConfig["class"] = $config["class"];
                     } elseif (!empty($config["path"])) {

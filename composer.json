@@ -9,7 +9,7 @@
     "composer-plugin-api": "^2.0"
   },
   "require-dev": {
-    "composer/composer": "^2.0.0",
+    "composer/composer": "^2.7.0",
     "phpunit/phpunit": "^9.0.0",
     "mockery/mockery": "^1.0.0",
     "dms/phpunit-arraysubset-asserts": "^0.3.0"
