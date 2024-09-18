@@ -1,8 +1,4 @@
 <?php
-/**
- * @package Puzzle-DI
- * @copyright Copyright © 2015 Danny Smart
- */
 
 namespace Lexide\PuzzleDI\Helper;
 
@@ -14,19 +10,12 @@ use Lexide\PuzzleDI\Exception\ConfigurationException;
 class PuzzleDataCollector
 {
 
-    /**
-     * @var InstallationManager
-     */
-    protected $installationManager;
+    protected InstallationManager $installationManager;
+    protected RepositoryInterface $repo;
 
     /**
-     * @var RepositoryInterface
-     */
-    protected $repo;
-
-    /**
-     * PuzzleDataCollector constructor.
      * @param InstallationManager $installationManager
+     * @param RepositoryInterface $repo
      */
     public function __construct(InstallationManager $installationManager, RepositoryInterface $repo)
     {
@@ -39,7 +28,7 @@ class PuzzleDataCollector
      * @return array
      * @throws ConfigurationException
      */
-    public function collectData(array $whitelist)
+    public function collectData(array $whitelist): array
     {
         $puzzleData = [];
         $whitelistChain = [];
@@ -47,51 +36,45 @@ class PuzzleDataCollector
             /** @var Package $package */
             $extra = $package->getExtra();
             $packageName = $package->getName();
-            $puzzleConfigKeys = [
-                "downsider-puzzle-di",
-                "lexide/puzzle-di"
-            ];
-            foreach ($puzzleConfigKeys as $configKey) {
-                if (!empty($extra[$configKey]) && is_array($extra[$configKey])) {
-                    $repoConfig = $extra[$configKey];
+            $configKey = "lexide/puzzle-di";
 
-                    // handle version 1.* config formats
-                    if (!isset($repoConfig["files"]) && !isset($repoConfig["whitelist"])) {
-                        $repoConfig = ["files" => $repoConfig];
-                    }
+            if (!empty($extra[$configKey]) && is_array($extra[$configKey])) {
+                $repoConfig = $extra[$configKey];
 
-                    // prepare the whitelist chain
-                    if (!empty($repoConfig["whitelist"]) && is_array($repoConfig["whitelist"])) {
-                        if (empty($whitelistChain[$packageName])) {
-                            $whitelistChain[$packageName] = [];
-                        }
-                        $whitelistChain[$packageName] = $repoConfig["whitelist"];
-                    }
+                // prepare the whitelist chain
+                if (!empty($repoConfig["whitelist"]) && is_array($repoConfig["whitelist"])) {
+                    $whitelistChain[$packageName] = $repoConfig["whitelist"];
+                }
 
-                    // if we don't have any files, we're done now
-                    if (empty($repoConfig["files"])) {
+                // if we don't have any files, we're done now
+                if (empty($repoConfig["files"])) {
+                    continue;
+                }
+
+                foreach ($repoConfig["files"] as $targetLibrary => $config) {
+                    // ignore numeric keys
+                    if ($targetLibrary == (string)(int)$targetLibrary) {
                         continue;
                     }
 
-                    foreach ($repoConfig["files"] as $targetLibrary => $config) {
-                        // ignore numeric keys
-                        if ($targetLibrary == (string)(int)$targetLibrary) {
-                            continue;
-                        }
+                    $puzzleConfig = [
+                        "name" => $packageName,
+                    ];
 
-                        $puzzleConfig = [
-                            "name" => $packageName,
-                            "path" => $this->installationManager->getInstallPath($package) . "/" . $config["path"]
-                        ];
-                        if (!empty($config["alias"])) {
-                            $puzzleConfig["alias"] = $config["alias"];
-                        }
-
-                        if (!array_key_exists($targetLibrary, $puzzleData)) {
-                            $puzzleData[$targetLibrary] = [];
-                        }
-                        $puzzleData[$targetLibrary][$packageName] = $puzzleConfig;
+                    if (!empty($config["class"])) {
+                        $puzzleConfig["class"] = $config["class"];
+                    } elseif (!empty($config["path"])) {
+                        $puzzleConfig["path"] = $this->installationManager->getInstallPath($package) . "/" . $config["path"];
                     }
+
+                    if (!empty($config["alias"])) {
+                        $puzzleConfig["alias"] = $config["alias"];
+                    }
+
+                    if (!array_key_exists($targetLibrary, $puzzleData)) {
+                        $puzzleData[$targetLibrary] = [];
+                    }
+                    $puzzleData[$targetLibrary][$packageName] = $puzzleConfig;
                 }
             }
         }

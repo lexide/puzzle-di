@@ -9,9 +9,14 @@ namespace Lexide\PuzzleDI\Compiler;
 abstract class AbstractPuzzleConfig
 {
 
-    protected static $configList = [];
+    protected static array $configList = [];
 
-    public static function getConfigPaths($key) {
+    /**
+     * @param string $key
+     * @return array
+     */
+    public static function getConfigItems(string $key): array
+    {
         if (empty(static::$configList[$key])) {
             // return an empty array
             return [];
