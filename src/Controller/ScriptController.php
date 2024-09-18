@@ -71,7 +71,7 @@ class ScriptController
 
         if (empty($data)) {
             // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
-            $this->output->write("<comment>lexide/puzzle-di</comment> <info> did not find any installed (and whitelisted) modules with puzzle-di configuration.</info>");
+            $this->output->write("<comment>lexide/puzzle-di</comment> <info>did not find any installed (and whitelisted) modules with puzzle-di configuration.</info>");
             // we still need to create the PuzzleConfig class, so don't end the script here
         }
 
