@@ -77,7 +77,7 @@ use Lexide\PuzzleDI\Compiler\AbstractPuzzleConfig;
 class PuzzleConfig extends AbstractPuzzleConfig
 {
 
-    protected static \$configList = [
+    protected static array \$configList = [
 $configList
     ];
 
