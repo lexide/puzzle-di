@@ -71,7 +71,7 @@ class ScriptController
 
         if (empty($data)) {
             // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
-            $this->output->write("</info><info>Lexide/PuzzleDI:</info> No installed modules are configured (and whitelisted) for use with Puzzle DI");
+            $this->output->write("<comment>lexide/puzzle-di</comment> <info> did not find any installed (and whitelisted) modules with puzzle-di configuration.</info>");
             // we still need to create the PuzzleConfig class, so don't end the script here
         }
 
@@ -87,8 +87,8 @@ class ScriptController
         $pathMask = !empty($puzzleComposerConfig["absolute-paths"])? "": $appRootDir . DIRECTORY_SEPARATOR;
 
         // generate the PuzzleConfig class
-        $this->output->write("</info><info>Lexide/PuzzleDI:</info> Compiling <comment>{$appNamespace}PuzzleConfig</comment> to <comment>{$this->compiler->getPuzzleConfigFilepath($appSourceDir)}</comment>");
         $this->compiler->compile($data, $appNamespace, $appSourceDir, $pathMask);
+        $this->output->write("<comment>lexide/puzzle-di</comment> <info>has compiled</info> <comment>{$appNamespace}PuzzleConfig</comment> <info>to</info> <comment>{$this->compiler->getPuzzleConfigFilepath($appSourceDir)}.</comment>");
     }
 
     /**
@@ -105,8 +105,8 @@ class ScriptController
 
         // remove the PuzzleConfig class if it exists
         $puzzleConfigPath = $this->compiler->getPuzzleConfigFilepath($appSourceDir);
-        $this->output->write("</info><info>Lexide/PuzzleDI:</info> Removing <comment>{$appNamespace}PuzzleConfig</comment> from <comment>$puzzleConfigPath</comment>");
         unlink($puzzleConfigPath);
+        $this->output->write("<comment>lexide/puzzle-di</comment> <info>has removed</info> <comment>{$appNamespace}PuzzleConfig</comment> <info>from</info> <comment>$puzzleConfigPath.</comment>");
 
     }
 
