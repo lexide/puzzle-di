@@ -13,6 +13,7 @@ use Composer\Package\PackageInterface;
 use Composer\Script\Event;
 use Lexide\PuzzleDI\Compiler\PuzzleClassCompiler;
 use Lexide\PuzzleDI\Exception\ConfigurationException;
+use Lexide\PuzzleDI\Helper\AutoloadInitialiser;
 use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 
 class ScriptController
@@ -34,6 +35,11 @@ class ScriptController
     protected $package;
 
     /**
+     * @var AutoloadInitialiser
+     */
+    protected $autoloadInitialiser;
+
+    /**
      * @var IOInterface
      */
     protected $output;
@@ -42,13 +48,20 @@ class ScriptController
      * @param PuzzleClassCompiler $compiler
      * @param PuzzleDataCollector $dataCollector
      * @param PackageInterface $package
+     * @param AutoloadInitialiser $autoloadInitialiser
      * @param IOInterface $output
      */
-    public function __construct(PuzzleClassCompiler $compiler, PuzzleDataCollector $dataCollector, PackageInterface $package, IOInterface $output)
-    {
+    public function __construct(
+        PuzzleClassCompiler $compiler,
+        PuzzleDataCollector $dataCollector,
+        PackageInterface $package,
+        AutoloadInitialiser $autoloadInitialiser,
+        IOInterface $output
+    ) {
         $this->compiler = $compiler;
         $this->dataCollector = $dataCollector;
         $this->package = $package;
+        $this->autoloadInitialiser = $autoloadInitialiser;
         $this->output = $output;
     }
 
@@ -73,6 +86,8 @@ class ScriptController
             // don't throw an exception in this case as we may not have installed any modules that use Puzzle DI
             $this->output->write("<comment>lexide/puzzle-di</comment> <info>did not find any installed (and whitelisted) modules with puzzle-di configuration.</info>");
             // we still need to create the PuzzleConfig class, so don't end the script here
+        } else {
+            $this->autoloadInitialiser->initAutoloaderIfRequired($this->package, $data);
         }
 
         // find the path to the parent package's target directory
