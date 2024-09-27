@@ -13,6 +13,7 @@ use Composer\Package\PackageInterface;
 use Composer\Script\Event;
 use Lexide\PuzzleDI\Compiler\PuzzleClassCompiler;
 use Lexide\PuzzleDI\Exception\ConfigurationException;
+use Lexide\PuzzleDI\Exception\InitialisationException;
 use Lexide\PuzzleDI\Helper\AutoloadInitialiser;
 use Lexide\PuzzleDI\Helper\PuzzleDataCollector;
 
@@ -87,7 +88,12 @@ class ScriptController
             $this->output->write("<comment>lexide/puzzle-di</comment> <info>did not find any installed (and whitelisted) modules with puzzle-di configuration.</info>");
             // we still need to create the PuzzleConfig class, so don't end the script here
         } else {
-            $this->autoloadInitialiser->initAutoloaderIfRequired($this->package, $data);
+            try {
+                $this->autoloadInitialiser->initAutoloaderIfRequired($this->package, $data);
+            } catch (InitialisationException $e) {
+                $this->output->write("<comment>lexide/puzzle-di</comment> <error>{$e->getMessage()}</error>");
+                return;
+            }
         }
 
         // find the path to the parent package's target directory

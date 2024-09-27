@@ -6,6 +6,7 @@ use Composer\Autoload\AutoloadGenerator;
 use Composer\Installer\InstallationManager;
 use Composer\Package\PackageInterface;
 use Composer\Repository\RepositoryManager;
+use Lexide\PuzzleDI\Exception\InitialisationException;
 
 class AutoloadInitialiser
 {
@@ -16,22 +17,37 @@ class AutoloadInitialiser
     protected PackageInterface $rootPackage;
     protected string $vendorDirectory;
 
-    public function __construct(RepositoryManager $repositoryManager, InstallationManager $installationManager, AutoloadGenerator $generator, string $vendorDirectory)
-    {
+    /**
+     * @param RepositoryManager $repositoryManager
+     * @param InstallationManager $installationManager
+     * @param AutoloadGenerator $generator
+     * @param string $vendorDirectory
+     */
+    public function __construct(
+        RepositoryManager $repositoryManager,
+        InstallationManager $installationManager,
+        AutoloadGenerator $generator,
+        string $vendorDirectory
+    ) {
         $this->repositoryManager = $repositoryManager;
         $this->installationManager = $installationManager;
         $this->generator = $generator;
         $this->vendorDirectory = $vendorDirectory;
     }
 
+    /**
+     * @param PackageInterface $rootPackage
+     * @param array $puzzleData
+     * @throws InitialisationException
+     */
     public function initAutoloaderIfRequired(PackageInterface $rootPackage, array $puzzleData): void
     {
         // parse puzzleData for "class" attributes
         $classPackages = [];
         foreach ($puzzleData as $packageData) {
-            foreach ($packageData as $packageName => $packageConfig) {
+            foreach ($packageData as $packageConfig) {
                 if (!empty($packageConfig["class"])) {
-                    $classPackages[$packageName] = true;
+                    $classPackages[$packageConfig["name"]] = true;
                 }
             }
         }
@@ -44,9 +60,13 @@ class AutoloadInitialiser
         // init the autoloader for all packages which use them, and their dependencies
         $autoloadMap = [];
         foreach (array_keys($classPackages) as $packageName) {
-            $package = $this->repositoryManager->findPackage($packageName, "*");
+            $package = $this->findInstalledPackage($packageName);
+            if (empty($package)) {
+                throw new InitialisationException("Couldn't find installed version of '$packageName', from Puzzle composer config");
+            }
+
             $autoloadMap[$packageName] = [$package, $this->installationManager->getInstallPath($package)];
-            $autoloadMap = $this->collectDependencies($autoloadMap, $package);
+            $autoloadMap = $this->collectDependencies($autoloadMap, $package, $packageName);
         }
 
         $map = $this->generator->parseAutoloads($autoloadMap, $rootPackage);
@@ -58,16 +78,44 @@ class AutoloadInitialiser
     /**
      * @param array $autoloadMap
      * @param PackageInterface $package
+     * @param string $parentPackageName
      * @return array
+     * @throws InitialisationException
      */
-    protected function collectDependencies(array $autoloadMap, PackageInterface $package)
+    protected function collectDependencies(array $autoloadMap, PackageInterface $package, string $parentPackageName): array
     {
-        foreach ($package->getRequires() as $requireName => $requiredPackage) {
-            /** @var PackageInterface $requiredPackage */
-            $autoloadMap[$requireName] ??= [$requiredPackage, $this->installationManager->getInstallPath($requiredPackage)];
-            $autoloadMap = $this->collectDependencies($autoloadMap, $requiredPackage);
+        $requires = $package->getRequires();
+
+        foreach ($requires as $requireName => $requiredLink) {
+            $targetName = $requiredLink->getTarget();
+            if ($targetName == "php") {
+                continue;
+            }
+            $requiredPackage = $this->findInstalledPackage($targetName);
+            if (empty($requiredPackage)) {
+                throw new InitialisationException("Can't find package '$targetName', required by '$parentPackageName'");
+            }
+
+            $autoloadMap[$targetName] ??= [$requiredPackage, $this->installationManager->getInstallPath($requiredPackage)];
+            $autoloadMap = $this->collectDependencies($autoloadMap, $requiredPackage, $parentPackageName);
         }
         return $autoloadMap;
+    }
+
+    /**
+     * @param string $packageName
+     * @return ?PackageInterface
+     */
+    protected function findInstalledPackage(string $packageName): ?PackageInterface
+    {
+        $packages = $this->repositoryManager->findPackages($packageName, "*");
+        $repo = $this->repositoryManager->getLocalRepository();
+        foreach ($packages as $package) {
+            if ($this->installationManager->isPackageInstalled($repo, $package)) {
+                return $package;
+            }
+        }
+        return null;
     }
 
 }
