@@ -11,6 +11,11 @@ use Lexide\PuzzleDI\Exception\InitialisationException;
 class AutoloadInitialiser
 {
 
+    const IGNORED_DEPENDENCIES = [
+        "php" => true,
+        "composer-plugin-api" => true
+    ];
+
     protected RepositoryManager $repositoryManager;
     protected InstallationManager $installationManager;
     protected AutoloadGenerator $generator;
@@ -86,9 +91,9 @@ class AutoloadInitialiser
     {
         $requires = $package->getRequires();
 
-        foreach ($requires as $requireName => $requiredLink) {
+        foreach ($requires as $requiredLink) {
             $targetName = $requiredLink->getTarget();
-            if ($targetName == "php") {
+            if (isset(self::IGNORED_DEPENDENCIES[$targetName]) ||str_starts_with($targetName, "ext")) {
                 continue;
             }
             $requiredPackage = $this->findInstalledPackage($targetName);
