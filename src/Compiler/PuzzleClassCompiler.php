@@ -56,7 +56,7 @@ class PuzzleClassCompiler
                     throw new ConfigurationException("There is no name or alias associated with key '$key'");
                 }
 
-                $configKey = $config["alias"] ?? str_replace("/", "_", $config["name"]);
+                $configKey = $config["alias"] ?? $config["name"];
                 $keyConfigs[] = "            \"$configKey\" => \"$configItem\"";
             }
 
