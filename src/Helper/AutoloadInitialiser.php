@@ -93,7 +93,7 @@ class AutoloadInitialiser
 
         foreach ($requires as $requiredLink) {
             $targetName = $requiredLink->getTarget();
-            if (isset(self::IGNORED_DEPENDENCIES[$targetName]) ||str_starts_with($targetName, "ext")) {
+            if (isset(self::IGNORED_DEPENDENCIES[$targetName]) || str_starts_with($targetName, "ext")) {
                 continue;
             }
             $requiredPackage = $this->findInstalledPackage($targetName);
