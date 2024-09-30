@@ -103,7 +103,7 @@ SOURCE;
      */
     public function getPuzzleConfigFilepath(string $appSourceDir): string
     {
-        return $appSourceDir . "/PuzzleConfig.php";
+        return $appSourceDir . "PuzzleConfig.php";
     }
 
 } 
