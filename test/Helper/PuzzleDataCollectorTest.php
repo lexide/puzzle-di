@@ -341,7 +341,6 @@ class PuzzleDataCollectorTest extends TestCase
                     ]
                 ]
             ],
-              #9 TODO: add test for "class"
             [ #10 multiple targets, one whitelisted for the other and not whitelisted as a target
                 [
                     "one" => [
